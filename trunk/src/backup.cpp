@@ -23,6 +23,38 @@ using namespace std;
 using namespace libdar;
 
 
+mask* Backup::gen_mask_from_multiple_option(const Glib::ustring& name, tMaskType maskType)
+{
+	Glib::ustring rootPath = mpConfig->get_option(mSection, "root");
+
+	mask* pmask;
+	if(mpConfig->get_num_option(mSection, name.c_str()) == 0) {
+		if(maskType == INCLUDE_DIRS)
+			pmask = new bool_mask(true);
+		else if(maskType == EXCLUDE_DIRS)
+			pmask = new bool_mask(false);
+	}
+	else
+	{
+		tValueList dirList = mpConfig->get_multiple_option(mSection, name.c_str());
+		ou_mask ouMask;
+		
+		for(tValueList::const_iterator iter = dirList.begin();
+				iter != dirList.end();	++iter)
+		{
+			stringstream path;
+			path << rootPath << '/' << *iter;
+			if(maskType == INCLUDE_DIRS)
+				ouMask.add_mask(simple_path_mask(path.str(), true));
+			else if(maskType == EXCLUDE_DIRS)
+				ouMask.add_mask(simple_mask(path.str(), true));
+		}
+		pmask = new ou_mask(ouMask);
+	}
+	return pmask;
+}
+
+
 void Backup::action()
 {
 	try {
@@ -35,38 +67,13 @@ void Backup::action()
 		Glib::ustring rootPath = mpConfig->get_option(mSection, "root");
 
 		// setup directorie mask
-		auto_ptr<mask> dirMask;
-		if(mpConfig->get_num_option(mSection, "dirs") == 0) {
-			dirMask = auto_ptr<mask>(new bool_mask(true));
-		}
-		else
+		et_mask dirMask;
 		{
-			tValueList dirList = mpConfig->get_multiple_option(mSection, "dirs");
-			ou_mask ouMask;
-
-			for(tValueList::const_iterator iter = dirList.begin();
-					iter != dirList.end();	++iter)
-			{
-				stringstream path;
-				path << rootPath << '/' << *iter;
-
-				if(mpConfig->get_option(mSection, "dir_behaviour") == "include")
-					ouMask.add_mask(exclude_dir_mask(path.str(), true));
-				else
-					ouMask.add_mask(simple_path_mask(path.str(), true));
-			}
-
-			// exclude or include these directories			
-			if(mpConfig->get_option(mSection, "dir_behaviour") == "include")
-			{
-				dirMask = auto_ptr<mask>(new not_mask(ouMask));
-			}
-			else
-			{
-				dirMask = auto_ptr<mask>(new ou_mask(ouMask));
-			}
-		}
-
+			// include all from include_dirs option (or all if no dirs specified):
+			dirMask.add_mask(*gen_mask_from_multiple_option("include_dirs", INCLUDE_DIRS));
+			// with exception of the dirs of the prunes_dirs option:
+			dirMask.add_mask(not_mask(*gen_mask_from_multiple_option("prunes_dirs", EXCLUDE_DIRS)));		
+		}	
 
 		// setup compression mask
 		auto_ptr<mask> compressionMask;
@@ -147,7 +154,7 @@ void Backup::action()
 					mpConfig->get_option(mSection, "target").c_str(),
 					refArchive.get(), // archive reference (for incremental backups)
 					*filterMask, // file includes, excludes
-					*dirMask, // prunes
+					dirMask, // prunes
 					mpConfig->get_option(mSection, "name").c_str(),
 					"dar",
 					true, // allow overwrite

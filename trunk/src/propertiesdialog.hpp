@@ -21,18 +21,12 @@
 #define propertiesdialog_hpp
 
 #include <gtkmm/frame.h>
-#include <gtkmm/treemodel.h>
 #include <gtkmm/entry.h>
 #include <gtkmm/optionmenu.h>
-#include <gtkmm/treeview.h>
-#include <gtkmm/liststore.h>
 #include <gtkmm/box.h>
-#include <gtkmm/scrolledwindow.h>
-#include <gtkmm/buttonbox.h>
 #include <gtkmm/stock.h>
 #include <gtkmm/table.h>
 #include <gtkmm/filechooserdialog.h>
-#include <gtkmm/messagedialog.h>
 #include <gtkmm/dialog.h>
 
 #include <multipleoptionview.hpp>
@@ -46,13 +40,6 @@ typedef SigC::Signal0<void> tSignalRefresh;
 
 class PropertiesDialog : public Gtk::Dialog
 {
-	class DirListColumnRecord : public Gtk::TreeModel::ColumnRecord
-	{
-		public:
-			DirListColumnRecord() { add(mDir); }
-			Gtk::TreeModelColumn<Glib::ustring> mDir;
-	};
-
 	public:
 	PropertiesDialog(Gtk::Window&, Config*, tSectionID);
 	// save options to config
@@ -69,14 +56,10 @@ class PropertiesDialog : public Gtk::Dialog
 
 	void on_root_choose_button();
 	void on_targetdir_choose_button();
-	void on_dir_add_button();
-	void on_dir_remove_button();
 
 	MultipleFilterOptionView mFilterView;
-
-	Gtk::TreeView mDirList;
-	DirListColumnRecord mDirListColumnRecord;
-	Glib::RefPtr<Gtk::ListStore> mrDirListData;
+	MultipleDirOptionView mOptionDirectoryIncludes;
+	MultipleFilterOptionView mOptionDirectoryPrunes;
 };
 
 #endif

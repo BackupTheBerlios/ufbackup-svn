@@ -98,38 +98,36 @@ PropertiesDialog::PropertiesDialog(Window& parent, Config* config, tSectionID se
 	}
 
 	// setup directories frame and add to main box 
-	Frame* fileFrame = manage(new Frame());
+	Frame* directoriesFrame = manage(new Frame());
 	{
-		fileFrame->set_label("Directories");
-		fileFrame->set_border_width(3);
+		directoriesFrame->set_label("Directories");
+		directoriesFrame->set_border_width(3);
+		box->pack_start(*directoriesFrame, true, true);		
 	}
 
 	// setup dir box and add to frame
 	VBox* pdirectoriesBox = manage(new VBox());
-	fileFrame->add(*pdirectoriesBox);
-	
-	// setup add include/exclude dirs option and its box and add to dir box
+	directoriesFrame->add(*pdirectoriesBox);
+
+	// setup dir includes option and add to dir frame
 	{
-		HBox* pdirOptionBox = manage(new HBox());
-		pdirOptionBox->set_spacing(5);
-		Menu* pmenu = manage(new Menu());
+		pdirectoriesBox->pack_start(*manage(new Label("Include only these directories instead of all:")), PACK_SHRINK);
+		mOptionDirectoryIncludes.set_config(mpConfig);
+		mOptionDirectoryIncludes.set_section(mSection);
+		mOptionDirectoryIncludes.set_name("include_dirs");
+		mOptionDirectoryIncludes.set_root(mpConfig->get_option(mSection, "root"));
+		mOptionDirectoryIncludes.reload();
+		pdirectoriesBox->pack_start(mOptionDirectoryIncludes, PACK_EXPAND_WIDGET);
+	}
 
-		pmenu->append(*manage(new MenuItem("Include")));
-		pmenu->append(*manage(new MenuItem("Exclude")));
-
-		Glib::ustring selected = mpConfig->get_option(mSection, "dir_behaviour");
-
-		if(selected == "include")
-			pmenu->set_active(0);
-		else
-			pmenu->set_active(1);
-
-		mOptionDirBehaviour.set_menu(*pmenu);
-
-		pdirOptionBox->pack_start(mOptionDirBehaviour, PACK_SHRINK);
-		pdirOptionBox->pack_start(*manage(new Label("all but the directories specified below:")), PACK_SHRINK);
-			
-		pdirectoriesBox->pack_start(*pdirOptionBox, PACK_SHRINK);
+	// setup prunes option and add to dir frame
+	{
+		pdirectoriesBox->pack_start(*manage(new Label("Never include these directories:")), PACK_SHRINK);
+		mOptionDirectoryPrunes.set_config(mpConfig);
+		mOptionDirectoryPrunes.set_section(mSection);
+		mOptionDirectoryPrunes.set_name("prunes_dirs");
+		mOptionDirectoryPrunes.reload();
+		pdirectoriesBox->pack_start(mOptionDirectoryPrunes, PACK_EXPAND_WIDGET);
 	}
 	
 	// setup filter frame and add to main box 
@@ -151,118 +149,8 @@ PropertiesDialog::PropertiesDialog(Window& parent, Config* config, tSectionID se
 
 	
 
-
-	// Init and add file list
-	{
-		mrDirListData = ListStore::create(mDirListColumnRecord);
-		mrDirListData->set_sort_column_id(0, SORT_ASCENDING);
-		mDirList.set_model(mrDirListData);
-		mDirList.set_headers_visible(false);
-		mDirList.append_column("Excluded directories", mDirListColumnRecord.mDir);
-
-		// add entrys to list 
-		tValueList files = mpConfig->get_multiple_option(mSection, "dirs");
-
-		Gtk::TreeModel::Row row;
-		for(tValueList::const_iterator iter = files.begin();
-				iter != files.end();	++iter)
-		{
-			row = *(mrDirListData->append());
-			row[mDirListColumnRecord.mDir] = *iter;
-		}
-
-		// put file list in scrollable widget
-		ScrolledWindow* pScrolled = manage(new ScrolledWindow());
-		pScrolled->add(mDirList);
-		pScrolled->set_border_width(2);
-		pScrolled->set_shadow_type(SHADOW_IN);
-		pScrolled->set_policy(POLICY_AUTOMATIC, POLICY_AUTOMATIC);
-
-		// "add/remove" buttons
-		VButtonBox* pButtons = manage(new VButtonBox(BUTTONBOX_START, 3));
-
-		Button* pAddButton = manage(new Button(Stock::ADD));
-		pAddButton->signal_clicked().connect(
-				sigc::mem_fun(*this, &PropertiesDialog::on_dir_add_button));
-
-		Button* pRemoveButton =  manage(new Button(Stock::REMOVE));
-		pRemoveButton->signal_clicked().connect(
-				sigc::mem_fun(*this, &PropertiesDialog::on_dir_remove_button));
-
-		pButtons->pack_start(*pAddButton);
-		pButtons->pack_start(*pRemoveButton);
-		pButtons->set_border_width(3);
-
-		// add list and buttons to box and add this to directories box
-		HBox* phbox = manage(new HBox());
-
-		phbox->pack_start(*pScrolled, true, true);
-		phbox->pack_start(*pButtons, false, false);
-
-		pdirectoriesBox->pack_start(*phbox, PACK_EXPAND_WIDGET);
-	}
-
-	box->pack_start(*fileFrame, true, true);		
 	
 	show_all_children();
-}
-
-void PropertiesDialog::on_dir_add_button()
-{
-
-	// open dialog to get file/dir
-
-	FileChooserDialog dialog("Please choose folders",
-			FILE_CHOOSER_ACTION_SELECT_FOLDER);
-
-	Glib::ustring root = mOptionRoot.get_text(); 
-
-	dialog.set_current_folder(root);
-	dialog.add_button("Select", Gtk::RESPONSE_OK);
-	dialog.set_select_multiple();
-
-
-	if(dialog.run() == RESPONSE_OK)
-	{
-		Glib::SListHandle<Glib::ustring> list = dialog.get_filenames();
-		Glib::SListHandle<Glib::ustring>::const_iterator iter = list.begin();
-		bool legal = true;
-		for(iter = list.begin(); iter != list.end(); ++iter) {
-			Glib::ustring selected = *iter; 
-			// abort if selected file/dir is not below root dir)
-			if(selected.substr(0, root.size()) != root) {
-				legal = false;
-			}else
-			{	
-				// strip off root path
-				selected = selected.substr(root.size(), selected.size() - root.size());
-				if(selected[0] == '/')
-					selected = selected.substr(1, selected.size());
-
-				// add to DirList
-				Gtk::TreeModel::Row row;
-				row = *(mrDirListData->append());
-				row[mDirListColumnRecord.mDir] = selected;
-			}
-		}
-		if(not legal) {
-			Gtk::MessageDialog errdialog(
-					*((Gtk::Window*) get_toplevel()),
-					"Some or all of the selected folders have been skipped because they are not below the root directory",
-					Gtk::MESSAGE_ERROR);
-			errdialog.run();
-		}
-	}
-}
-
-void PropertiesDialog::on_dir_remove_button()
-{
-	// remove selected directory from list
-	Glib::RefPtr<TreeSelection> refTreeSelection = mDirList.get_selection();
-	TreeModel::const_iterator iter = refTreeSelection->get_selected();
-	if(!iter)
-		return;
-	mrDirListData->erase(iter);
 }
 
 void PropertiesDialog::on_root_choose_button()
@@ -316,17 +204,10 @@ void PropertiesDialog::save()
 	if(mOptionDirBehaviour.get_history() == 1)
 		behaviour = "exclude";
 	mpConfig->set_option(mSection, "dir_behaviour", behaviour);
-	
 
-	// dirs
-	mpConfig->remove_multiple_option_entries(mSection, "dirs");
-	for(ListStore::const_iterator iter =
-			mrDirListData->children().begin();
-			iter !=
-			mrDirListData->children().end();
-			++iter)
-		mpConfig->add_multiple_option(mSection, "dirs",
-				(*iter)[mDirListColumnRecord.mDir]);
+	// dir options
+	mOptionDirectoryPrunes.save_to_config();
+	mOptionDirectoryIncludes.save_to_config();
 
 	// filters
 	mFilterView.save_to_config();

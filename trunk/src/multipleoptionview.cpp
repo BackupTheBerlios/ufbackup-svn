@@ -43,23 +43,12 @@ MultipleOptionView::MultipleOptionView()
 	}
 
 	// setup "add/remove" buttons and add to box
-	{
-		VButtonBox* pbuttons = manage(new VButtonBox(BUTTONBOX_START, 3));
-
-		Button* pAddButton = manage(new Button(Stock::ADD));
-		pAddButton->signal_clicked().connect(
-				sigc::mem_fun(*this, &MultipleOptionView::on_add_button));
-
-		Button* pRemoveButton =  manage(new Button(Stock::REMOVE));
-		pRemoveButton->signal_clicked().connect(
-				sigc::mem_fun(*this, &MultipleOptionView::on_remove_button));
-
-		pbuttons->pack_start(*pAddButton);
-		pbuttons->pack_start(*pRemoveButton);
-		pbuttons->set_border_width(3);
-
-		pack_start(*pbuttons, PACK_SHRINK);
-	}
+	Button* pRemoveButton =  manage(new Button(Stock::REMOVE));
+	pRemoveButton->signal_clicked().connect(
+			sigc::mem_fun(*this, &MultipleOptionView::on_remove_button));
+	mButtons.pack_end(*pRemoveButton);
+	mButtons.set_border_width(3);
+	pack_start(mButtons, PACK_SHRINK);
 
 	show_all_children();
 }
@@ -116,7 +105,7 @@ void MultipleOptionView::on_remove_button()
 	mrListData->erase(iter);
 }
 
-void MultipleFilterOptionView::on_add_button()
+void MultipleOptionView::on_add_filter_button()
 {
 	Dialog dialog("Add filter", get_toplevel());
 	dialog.add_button(Stock::OK, 1);
@@ -126,7 +115,7 @@ void MultipleFilterOptionView::on_add_button()
 	// setup dialog
 	{
 		VBox* mainbox = dialog.get_vbox(); 
-		Label* plabel = manage(new Label("Enter filename (Wildcards: ? and *)"));
+		Label* plabel = manage(new Label("Please enter your filter string (Wildcards supported):"));
 		mainbox->pack_start(*plabel, PACK_SHRINK);
 		mainbox->pack_start(*pentry, PACK_SHRINK);
 	}
@@ -134,4 +123,77 @@ void MultipleFilterOptionView::on_add_button()
 	
 	if(dialog.run() == 1 && pentry->get_text() != "")
 		add_entry(pentry->get_text());
+}
+
+
+MultipleDirOptionView::MultipleDirOptionView()
+{
+	Button* pAddButton = manage(new Button("Add filter"));
+	pAddButton->signal_clicked().connect(
+			sigc::mem_fun(*this, &MultipleOptionView::on_add_filter_button));
+
+	mButtons.pack_end(*pAddButton);
+	mButtons.reorder_child(*pAddButton, 0);
+
+	pAddButton = manage(new Button(Stock::ADD));
+	pAddButton->signal_clicked().connect(
+			sigc::mem_fun(*this, &MultipleDirOptionView::on_add_button));
+
+	mButtons.pack_end(*pAddButton);
+	mButtons.reorder_child(*pAddButton, 0);
+}
+
+MultipleFilterOptionView::MultipleFilterOptionView()
+{
+	Button* pAddButton = manage(new Button("Add filter"));
+	pAddButton->signal_clicked().connect(
+			sigc::mem_fun(*this, &MultipleOptionView::on_add_filter_button));
+
+	mButtons.pack_end(*pAddButton);
+	mButtons.reorder_child(*pAddButton, 0);
+}
+
+
+void MultipleDirOptionView::on_add_button()
+{
+
+	// open dialog to get file/dir
+
+	FileChooserDialog dialog("Please choose folders",
+			FILE_CHOOSER_ACTION_SELECT_FOLDER);
+
+	dialog.set_current_folder(mRoot);
+	dialog.add_button("Select", Gtk::RESPONSE_OK);
+	dialog.set_select_multiple();
+
+
+	if(dialog.run() == RESPONSE_OK)
+	{
+		Glib::SListHandle<Glib::ustring> list = dialog.get_filenames();
+		Glib::SListHandle<Glib::ustring>::const_iterator iter = list.begin();
+		bool legal = true;
+		for(iter = list.begin(); iter != list.end(); ++iter) {
+			Glib::ustring selected = *iter; 
+			// abort if selected file/dir is not below root dir)
+			if(selected.substr(0, mRoot.size()) != mRoot) {
+				legal = false;
+			}else
+			{	
+				// strip off root path
+				selected = selected.substr(mRoot.size(), selected.size() - mRoot.size());
+				if(selected[0] == '/')
+					selected = selected.substr(1, selected.size());
+
+				// add to DirList
+				add_entry(selected);
+			}
+		}
+		if(not legal) {
+			Gtk::MessageDialog errdialog(
+					*((Gtk::Window*) get_toplevel()),
+					"Some or all of the selected folders have been skipped because they are not below the root directory",
+					Gtk::MESSAGE_ERROR);
+			errdialog.run();
+		}
+	}
 }

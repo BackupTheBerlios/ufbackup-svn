@@ -24,6 +24,9 @@
 #include <memory>
 #include <unistd.h>
 
+enum tMaskType {
+	INCLUDE_DIRS, EXCLUDE_DIRS };
+
 
 /// Class which creates a backup of some data
 class Backup : public DARAction
@@ -38,6 +41,8 @@ class Backup : public DARAction
 	protected:
 		void action();
 	private:
+		libdar::mask* gen_mask_from_multiple_option(const Glib::ustring&, tMaskType);
+				
 		bool is_incremental() {
 			if(mpConfig->get_option(mSection, "type") == "incremental")
 				return true;

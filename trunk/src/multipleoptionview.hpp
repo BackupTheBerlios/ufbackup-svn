@@ -30,6 +30,8 @@
 #include <gtkmm/box.h>
 #include <gtkmm/dialog.h>
 #include <gtkmm/stock.h>
+#include <gtkmm/filechooserdialog.h>
+#include <gtkmm/messagedialog.h>
 #include <config.hpp>
 
 class MultipleOptionView : public Gtk::HBox
@@ -51,7 +53,8 @@ class MultipleOptionView : public Gtk::HBox
 	void add_entry(Glib::ustring);
 
 	protected:
-	virtual void on_add_button() = 0;
+	Gtk::VButtonBox mButtons;
+	void on_add_filter_button();
 
 	private:
 	void on_remove_button();
@@ -68,8 +71,20 @@ class MultipleOptionView : public Gtk::HBox
 
 class MultipleFilterOptionView : public MultipleOptionView
 {
-	protected:
-		void on_add_button();	
+	public:
+		MultipleFilterOptionView();
 };
+
+class MultipleDirOptionView : public MultipleOptionView
+{
+	public:
+		MultipleDirOptionView();
+		void set_root(const Glib::ustring& root) {
+			mRoot = root; }
+	protected:
+		void on_add_button();
+		Glib::ustring mRoot;
+};
+
 
 #endif
