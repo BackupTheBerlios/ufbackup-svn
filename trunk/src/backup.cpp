@@ -72,6 +72,7 @@ void Backup::action()
 		auto_ptr<mask> compressionMask;
 		if(mpConfig->get_num_option(0, "compr_filters") == 0) {
 			compressionMask = auto_ptr<mask>(new bool_mask(true));
+			message("Using compression for all");
 		}
 		else
 		{
@@ -112,8 +113,10 @@ void Backup::action()
 		message("Creating archive...");
 
 		compression comprAlgo;
-		if(mpConfig->get_option(0, "compr_algo") == "bzip2")
+		if(mpConfig->get_option(0, "compr_algo") == "bzip2"){
+			message("Using bzip2");	
 			comprAlgo = bzip2;
+		}
 		else if(mpConfig->get_option(0, "compr_algo") == "gzip")
 			comprAlgo = gzip;
 		else
@@ -188,7 +191,7 @@ void Backup::action()
 					false, // notify overwrite
 					mpConfig->get_bool_option(0, "verbose"),
 					false, // pause
-					none,
+					comprAlgo,
 					9,
 					tmp.computer(), // slice size
 					tmp.computer(), // first slice

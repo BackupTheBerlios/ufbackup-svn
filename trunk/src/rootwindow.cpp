@@ -98,6 +98,11 @@ ToolButton& get_finished_toolbutton(Tooltips* tt, char* stock, char* label, char
 				Menu_Helpers::ImageMenuElem("_Restore backup", *(new Image(StockID("gtk-undo"), ICON_SIZE_MENU)),
 					sigc::mem_fun(*this, &RootWindow::on_button_restore_backup) ) );
 
+		pmenu->items().push_back(
+				Menu_Helpers::ImageMenuElem("_List contents", *(new Image(StockID("gtk-find"), ICON_SIZE_MENU)),
+					sigc::mem_fun(*this, &RootWindow::on_button_listing) ) );
+
+
 		pmenuBar->items().push_back(
 				Menu_Helpers::MenuElem("_Job", *pmenu));
 
@@ -157,6 +162,10 @@ ToolButton& get_finished_toolbutton(Tooltips* tt, char* stock, char* label, char
 					"Restore", "Restore a backup of the selected job"),
 				sigc::mem_fun(*this, &RootWindow::on_button_restore_backup));
 
+	ptoolbar->append(
+				get_finished_toolbutton(ptooltips, "gtk-find",
+					"List", "List archive contents"),
+				sigc::mem_fun(*this, &RootWindow::on_button_listing));
 
 		pmainbox->pack_start(*ptoolbar, PACK_SHRINK);
 	}
@@ -246,6 +255,19 @@ void RootWindow::on_button_job_properties()
 	// run and check if we have to save the config
 	if(dialog.run() == 1)
 		dialog.save();
+}
+
+void RootWindow::on_button_listing()
+{
+	// get selected job id
+	tSectionID selected = get_selected_job_id();
+	if(selected == 0)
+		return;
+
+	// create dialog
+	ListingDialog dialog(*this, mpConfig,
+			selected);
+	dialog.run();
 }
 
 void RootWindow::on_button_start_backup()

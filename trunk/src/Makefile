@@ -12,7 +12,7 @@ LIBS = `pkg-config gtkmm-2.4 --libs` `pkg-config --libs gthread-2.0` -ldar  -lcc
 	$(CXX) $(CXXFLAGS) $(LIBS) $< -o $@ -lg++
 
 
-SRC = multipleoptionview.cpp daraction.cpp thread.cpp backup.cpp log.cpp rootwindow.cpp config.cpp ufbackup.cpp aboutdialog.cpp propertiesdialog.cpp backupdialog.cpp preferencesdialog.cpp
+SRC = listingdialog.cpp multipleoptionview.cpp daraction.cpp thread.cpp backup.cpp log.cpp rootwindow.cpp config.cpp ufbackup.cpp aboutdialog.cpp propertiesdialog.cpp backupdialog.cpp preferencesdialog.cpp
 
 OBJ = $(addsuffix .o, $(basename $(SRC)))
 

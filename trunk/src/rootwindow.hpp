@@ -37,6 +37,7 @@
 #include <backupdialog.hpp>
 #include <propertiesdialog.hpp>
 #include <aboutdialog.hpp>
+#include <listingdialog.hpp>
 
 #include <config.hpp>
 
@@ -65,6 +66,7 @@ class RootWindow : public Gtk::Window
 		void on_button_job_properties();
 		void on_button_start_backup();
 		void on_button_restore_backup() {};
+		void on_button_listing();
 		void refresh_joblist();
 		void on_jobname_change(const Gtk::TreeModel::Path&, const Gtk::TreeModel::iterator&); 
 		tSectionID get_selected_job_id();
