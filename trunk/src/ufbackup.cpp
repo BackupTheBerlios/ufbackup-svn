@@ -44,8 +44,9 @@ int main(int argc,char *argv[])
   try {
 	  // get home dir
 	  stringstream configFile;
-	  configFile << get_home_dir() << '/' << __UFBACKUP_HOME << '/';
+	  configFile << get_home_dir() << '/' << __UFBACKUP_HOME;
 	  ustring home = configFile.str();
+	  configFile << '/';
 	  
 	  // check if config dir exist. If not, create it
 	  struct stat buf;
@@ -72,7 +73,6 @@ int main(int argc,char *argv[])
 
 	  // set needed options if new config file
 	  if(not existed) {
-		 config.set_option(0, "afio", "afio");
 		 config.set_option(0, "verbose", "false");
 		 config.save();
 	  }
