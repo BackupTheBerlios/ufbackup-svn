@@ -21,6 +21,7 @@
 #define backup_hpp
 
 #include <daraction.hpp>
+#include <memory>
 #include <unistd.h>
 
 
@@ -29,10 +30,17 @@ class Backup : public DARAction
 {
 	public:
 		Backup() {};
-		Backup(Config* config, tSectionID section) : Action(config, section) {}
+		Backup(Config* config, tSectionID section) : Action(config, section) { }
 		virtual void start() { action(); }
 	protected:
 		void action();
+	private:
+		bool is_incremental() {
+			if(mpConfig->get_option(mSection, "type") == "incremental")
+				return true;
+			else
+				return false;
+		}
 };
 
 #endif
