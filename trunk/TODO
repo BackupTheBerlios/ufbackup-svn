@@ -1,7 +1,6 @@
 -Check if backup termination is dangerous
 -Backup creation:
 	-Check for existance of last level backup
-	-File filter
 	-Slices
 	-Encryption
 	-Options:

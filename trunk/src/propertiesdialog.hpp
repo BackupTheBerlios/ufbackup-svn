@@ -35,6 +35,7 @@
 #include <gtkmm/messagedialog.h>
 #include <gtkmm/dialog.h>
 
+#include <multipleoptionview.hpp>
 #include <config.hpp>
 
 #ifdef DEBUG
@@ -70,6 +71,8 @@ class PropertiesDialog : public Gtk::Dialog
 	void on_targetdir_choose_button();
 	void on_dir_add_button();
 	void on_dir_remove_button();
+
+	MultipleFilterOptionView mFilterView;
 
 	Gtk::TreeView mDirList;
 	DirListColumnRecord mDirListColumnRecord;

@@ -86,6 +86,23 @@ void Backup::action()
 			compressionMask = auto_ptr<mask>(new not_mask(ouMask));
 		}
 
+		// setup filter mask TODO: make function (compressoin + filter mask are the same)
+		auto_ptr<mask> filterMask;
+		if(mpConfig->get_num_option(mSection, "filters") == 0) {
+			filterMask = auto_ptr<mask>(new bool_mask(true));
+		}
+		else
+		{
+			tValueList dirList = mpConfig->get_multiple_option(mSection, "filters");
+			ou_mask ouMask;
+
+			for(tValueList::const_iterator iter = dirList.begin();
+					iter != dirList.end();	++iter)
+				ouMask.add_mask(simple_mask((*iter).c_str(), false));
+
+			filterMask = auto_ptr<mask>(new not_mask(ouMask));
+		}
+
 		archive* pnewArchivePtr;
 		auto_ptr<archive> refArchive;
 
@@ -129,7 +146,7 @@ void Backup::action()
 					rootPath.c_str(),
 					mpConfig->get_option(mSection, "target").c_str(),
 					refArchive.get(), // archive reference (for incremental backups)
-					bool_mask(true), // file includes, excludes
+					*filterMask, // file includes, excludes
 					*dirMask, // prunes
 					mpConfig->get_option(mSection, "name").c_str(),
 					"dar",

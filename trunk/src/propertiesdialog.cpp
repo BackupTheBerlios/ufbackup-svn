@@ -132,6 +132,24 @@ PropertiesDialog::PropertiesDialog(Window& parent, Config* config, tSectionID se
 		pdirectoriesBox->pack_start(*pdirOptionBox, PACK_SHRINK);
 	}
 	
+	// setup filter frame and add to main box 
+	Frame* filterFrame = manage(new Frame());
+	{
+		filterFrame->set_label("File filters");
+		filterFrame->set_border_width(3);
+		box->pack_start(*filterFrame, PACK_EXPAND_WIDGET);
+	}
+
+	// setup filter option view and add to frame
+	{
+		mFilterView.set_config(mpConfig);
+		mFilterView.set_section(mSection);
+		mFilterView.set_name("filters");
+		mFilterView.reload();
+		filterFrame->add(mFilterView);		
+	}
+
+	
 
 
 	// Init and add file list
@@ -309,6 +327,9 @@ void PropertiesDialog::save()
 			++iter)
 		mpConfig->add_multiple_option(mSection, "dirs",
 				(*iter)[mDirListColumnRecord.mDir]);
+
+	// filters
+	mFilterView.save_to_config();
 
 	// save config
 	mpConfig->save();
