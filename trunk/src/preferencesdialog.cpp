@@ -104,6 +104,19 @@ PreferencesDialog::PreferencesDialog(Window& parent, Config* config)
 			rowcount++;
 		}
 
+
+		// add filter option
+		{
+			Frame* pframe = manage(new Frame("Compression filters"));
+			pframe->add(mOptionCompressionFilter);
+			mOptionCompressionFilter.set_config(mpConfig);
+			mOptionCompressionFilter.set_section(0);
+			mOptionCompressionFilter.set_name("compr_filters");
+			mOptionCompressionFilter.reload();
+			pbox->pack_start(*pframe, PACK_EXPAND_WIDGET);
+		}
+
+	
 		pbox->set_border_width(2);
 		pnotebook->append_page(*pbox, "Compression");
 	}
@@ -120,6 +133,7 @@ void PreferencesDialog::save()
 	mpConfig->set_bool_option(0, "notify_overwrite",
 			mOptionNotifyOverwrite.get_active());
 	mpConfig->set_option(0, "compr_min_file_size", mOptionFileSize.get_text().c_str());
+	mOptionCompressionFilter.save_to_config();
 	
 	{
 		Glib::ustring algo = "gzip";

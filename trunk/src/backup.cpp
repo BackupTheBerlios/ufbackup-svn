@@ -67,6 +67,24 @@ void Backup::action()
 			}
 		}
 
+
+		// setup compression mask
+		auto_ptr<mask> compressionMask;
+		if(mpConfig->get_num_option(0, "compr_filters") == 0) {
+			compressionMask = auto_ptr<mask>(new bool_mask(true));
+		}
+		else
+		{
+			tValueList dirList = mpConfig->get_multiple_option(0, "compr_filters");
+			ou_mask ouMask;
+
+			for(tValueList::const_iterator iter = dirList.begin();
+					iter != dirList.end();	++iter)
+				ouMask.add_mask(simple_mask((*iter).c_str(), false));
+
+			compressionMask = auto_ptr<mask>(new not_mask(ouMask));
+		}
+
 		archive* pnewArchivePtr;
 		auto_ptr<archive> refArchive;
 
@@ -126,7 +144,7 @@ void Backup::action()
 					"", // command between slices
 					crypto_none,
 					"", // crypto pass
-					bool_mask(true), // compression mask
+					*compressionMask, // compression mask
 					tmp.computer(), // min file size to compress
 					false, // nodump flag
 					false, // ignore ownership
