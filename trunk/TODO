@@ -1,0 +1,32 @@
+-Check if backup termination is dangerous
+-Backup creation:
+	-File filter
+	-Incremental backups
+	-Slices
+	-Encryption
+	-Options:
+		-Stay on same fs
+		-alter atime
+		-dummy run
+		-hourshift
+		-ignore ownership
+		-nodump flag
+		-toggle compression	
+-Backup restoration:
+	-Restore whole (last) archive
+	-Restore only single files
+-Archive listing:
+	-Search for files
+	-List archive contents
+-Global options:
+	-Compression type
+	-Compression level
+	-Compression filter
+	-Min file size to compress
+	-notify before overwrite? (backup/restoration)
+-More targets:
+	-CDR(W)
+-Translations
+-Documentation
+-GNOME usage
+-Backup druide
