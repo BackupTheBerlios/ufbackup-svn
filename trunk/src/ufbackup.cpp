@@ -45,6 +45,7 @@ int main(int argc,char *argv[])
 	  // get home dir
 	  stringstream configFile;
 	  configFile << get_home_dir() << '/' << __UFBACKUP_HOME << '/';
+	  ustring home = configFile.str();
 	  
 	  // check if config dir exist. If not, create it
 	  struct stat buf;
@@ -67,6 +68,7 @@ int main(int argc,char *argv[])
 
 	  // read config
 	  Config config(configFile.str().c_str());
+	  config.set_option(0, "home", home);  // FIXME: should save temporary
 
 	  // set needed options if new config file
 	  if(not existed) {
