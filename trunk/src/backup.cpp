@@ -32,9 +32,9 @@ void Backup::action()
 		Glib::ustring rootPath = mpConfig->get_option(mSection, "root");
 
 		// setup directorie mask
-		mask* dirMask;
+		auto_ptr<mask> dirMask;
 		if(mpConfig->get_num_option(mSection, "dirs") == 0) {
-			dirMask = new bool_mask(true);
+			dirMask = auto_ptr<mask>(new bool_mask(true));
 		}
 		else
 		{
@@ -56,15 +56,17 @@ void Backup::action()
 			// exclude or include these directories			
 			if(mpConfig->get_option(mSection, "dir_behaviour") == "include")
 			{
-				dirMask = new not_mask(ouMask);
+				dirMask = auto_ptr<mask>(new not_mask(ouMask));
 			}
 			else
 			{
-				dirMask = new ou_mask(ouMask);
+				dirMask = auto_ptr<mask>(new ou_mask(ouMask));
 			}
 		}
 
-		statistics stat = 
+		archive* pnewArchivePtr;
+
+		statistics stats = 
 			op_create(
 					*this,
 					rootPath.c_str(),
@@ -94,13 +96,26 @@ void Backup::action()
 					false, // ignore ownership
 					tmp.computer(), // hourshift
 					false, // dummy run
-					NULL,
+					&pnewArchivePtr,
 					false, // alter atime
 					false // stay on same fs
 						);
-					delete dirMask;
+		auto_ptr<archive> pnewArchive(pnewArchivePtr);
 
-					error("Done.");
+		// print statistics
+		{
+			stringstream msg;
+			msg << "Backup done: " << endl
+				<< stats.treated << " files/directories added" << endl
+				<< stats.errored << " files could not be saved" << endl
+				<< stats.ignored << " files/trees have been filtered out" <<endl;
+			if(is_incremental())
+				msg << stats.skipped << " files unchanged" << endl
+					 << stats.deleted << " files have been deleted";
+			message(msg.str().c_str());
+		}
+		
+
 	} catch(Egeneric& e) {
 		error(e.get_message().c_str());
 	}
