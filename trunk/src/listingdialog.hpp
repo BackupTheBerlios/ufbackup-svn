@@ -28,6 +28,7 @@
 #include <gtkmm/scrolledwindow.h>
 #include <gtkmm/dialog.h>
 #include <gtkmm/stock.h>
+#include <gtkmm/progressbar.h>
 
 #include <daraction.hpp>
 
@@ -57,20 +58,21 @@ class ListingDialog : public Gtk::Dialog, public DARAction
 	ListingDialog(Gtk::Window&, Config*, tSectionID);
 	
 	private:
+	Glib::ustring get_full_path(Gtk::TreeModel::iterator);
 
 	void reload_archive(unsigned int = 1);
 	
-	void listing(const std::string &, const std::string &, const std::string &, const std::string &, const std::string &, const std::string &, const std::string &); 
+	void listing(const std::string &, const std::string &, const std::string &, const std::string &, const std::string &, const std::string &, const std::string &, bool, bool); 
 
 	void warning(const std::string&);
 	void pause(const std::string&);
 
-	void list_path(const string& dir);
+	void add_rows(const string& dir, Gtk::TreeIter*);
+	void on_row_expand(const Gtk::TreeModel::iterator&, const Gtk::TreeModel::Path&);
 	
 	Config* mpConfig;
 	tSectionID mSection;
-	Gtk::TreeModel::Row* mpParentRow;
-	Glib::ustring mParentDir;
+	Gtk::TreeIter* mpParent;
 
 	std::auto_ptr<libdar::archive> mpArchive;
 

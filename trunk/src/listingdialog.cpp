@@ -26,7 +26,7 @@ using namespace libdar;
 
 ListingDialog::ListingDialog(Window& window, Config* config,
 		tSectionID section) : Dialog("Listing", window),
-		mpConfig(config), mSection(section), mpParentRow(NULL)
+		mpConfig(config), mSection(section)
 {
 	set_use_listing(true);
 	set_default_size(650,550);
@@ -50,6 +50,8 @@ ListingDialog::ListingDialog(Window& window, Config* config,
 		mView.append_column("Group",mColumnRecord.mGID);
 		mView.append_column("Permissions",mColumnRecord.mPermissions);
 		mView.append_column("Date",mColumnRecord.mDate);
+		mView.signal_row_expanded().connect(
+				sigc::mem_fun(*this, &ListingDialog::on_row_expand));
 	}
 	// put view in scrolled window and add it to mainbox
 	{
@@ -60,15 +62,41 @@ ListingDialog::ListingDialog(Window& window, Config* config,
 		pscrolled->set_policy(POLICY_AUTOMATIC, POLICY_AUTOMATIC);
 		mainbox->pack_start(*pscrolled, PACK_EXPAND_WIDGET);
 	}
-	
+		
 	show_all_children();	
 
 	try {
 		reload_archive();
-		list_path("");
+		add_rows("", NULL);
 	} catch(Egeneric& e) {
 		warning(e.get_message().c_str());
 	}
+}
+
+void ListingDialog::on_row_expand(const TreeModel::iterator& row, const TreeModel::Path& path)
+{
+	if(row->children().size() == 1 && (*(row->children().begin()))[mColumnRecord.mFilename] == "") {
+		mrData->erase(row->children().begin());
+		cerr << "Expanding " << (*row)[mColumnRecord.mFilename] << endl;
+		TreeIter thisrow(row);
+		add_rows(get_full_path(row), &thisrow);
+	}
+	mView.expand_row(path, false);
+}
+
+ustring ListingDialog::get_full_path(TreeModel::iterator row)
+{
+	ustring path;
+	while((*row)[mColumnRecord.mFilename] != "")
+	{
+		cerr << "path snipped: " << (*row)[mColumnRecord.mFilename] << endl;
+		ustring snippet = (*row)[mColumnRecord.mFilename];
+		snippet += '/';
+		path = snippet + path;
+		row = row->parent();
+	}
+	cerr << "Generated path: " << path << endl;
+	return path;
 }
 
 void ListingDialog::listing(const string & flag,
@@ -77,59 +105,40 @@ void ListingDialog::listing(const string & flag,
 		     const string & gid,
 		     const string & size,
 		     const string & date,
-		     const string & filename)
+		     const string & filename,
+			  bool isDir,
+			  bool has_children )
 {
+	TreeIter newRow;
 	
-	TreeModel::Row* prow, *poldrow;
-
-	// remember the current parent, because we have to reset it after
-	// processing this row's chilren (and thus making this row the parent)
-	poldrow = mpParentRow;
-	ustring lastdir = mParentDir;
-
 	// check if this is a child of another row
-	if(mpParentRow != NULL) {
-		prow = new TreeModel::Row(*(mrData->append(mpParentRow->children())));
+	if(mpParent != NULL) {
+		newRow = mrData->append((**mpParent)->children());
 	}
 	else
-		prow = new TreeModel::Row(*(mrData->append()));
+		newRow = mrData->append();
 	
 	// set data of row
-	(*prow)[mColumnRecord.mFlag] = flag;
-	(*prow)[mColumnRecord.mPermissions] = perm;
-	(*prow)[mColumnRecord.mUID] = uid;
-	(*prow)[mColumnRecord.mGID] = gid;
+	(*newRow)[mColumnRecord.mFlag] = flag;
+	(*newRow)[mColumnRecord.mPermissions] = perm;
+	(*newRow)[mColumnRecord.mUID] = uid;
+	(*newRow)[mColumnRecord.mGID] = gid;
 	stringstream filesize;
 	filesize << size;
 	unsigned long numfilesize;
 	filesize >> numfilesize;
-	(*prow)[mColumnRecord.mSize] = numfilesize;
-	(*prow)[mColumnRecord.mDate] = date;
-	(*prow)[mColumnRecord.mFilename] = filename;
-	
+	(*newRow)[mColumnRecord.mSize] = numfilesize;
+	(*newRow)[mColumnRecord.mDate] = date;
+	(*newRow)[mColumnRecord.mFilename] = filename;
 
-	// we are going to process the children of this row.
-	// before processing the children: make this row the new parent
-	mpParentRow = prow;
-	if(mParentDir != "")
-		mParentDir += '/';
-	mParentDir += filename;
-	
-	// process children
-	list_path(mParentDir);
-
-	// processing done.
-	// this row is no longer parent. reset to old parent
-	delete mpParentRow;
-	mpParentRow = poldrow; 
-	mParentDir = lastdir;
-
-	// add the size of this row to the parent row.
-	// directories' sizes in the listing will thus be the summed
-	// sizes of all its children
-	if(mpParentRow != NULL)
-		(*mpParentRow)[mColumnRecord.mSize] = (*prow)[mColumnRecord.mSize]
-			+ (*mpParentRow)[mColumnRecord.mSize];
+	// Dirty Hack (any other way to accomplish this?):
+	// If this is an directory which has children,
+	// add an empty child row to show the user that
+	// this row has children (the GUI draws an
+	// arrow). The children will be added when the
+	// user opens the row.
+	if(has_children)
+		newRow = mrData->append((*newRow).children());	
 }
 
 
@@ -156,14 +165,18 @@ void ListingDialog::reload_archive(unsigned int level)
 					));
 }
 
-void ListingDialog::list_path(const string& dir)
+void ListingDialog::add_rows(const string& dir, TreeIter* parent)
 {
-	if(not get_children_of(*this, mpArchive.get(), dir)) {
-		
-		mpParentRow = new TreeModel::Row(*(mpParentRow->parent()));
+	// set current parent, so that the listing(...) function knows where
+	// to add new rows
+	mpParent = parent;
+
+	try {
+		get_children_of(*this, mpArchive.get(), dir);
+	} catch(Egeneric& e) {
+		warning(e.get_message().c_str());
 	}
 }
-
 
 void ListingDialog::warning(const string& msg)
 {
