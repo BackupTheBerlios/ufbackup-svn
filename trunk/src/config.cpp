@@ -54,9 +54,7 @@ ustring Config::get_option(unsigned short sectionid, const char* name) const
 		return iter->second;
 	}
 	else {
-		stringstream msg;
-		msg << "Missing option \"" << name << "\" in config file";
-		throw runtime_error(msg.str());
+		return "";
 	}
 }
 

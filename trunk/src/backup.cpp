@@ -26,8 +26,11 @@ using namespace libdar;
 void Backup::action()
 {
 	try {
-		message("Starting Backup");
+		message("Starting backup.\n");
+		deci minFileSize("0");
 		deci tmp("0");
+		if(mpConfig->get_option(0, "compr_min_file_size") != "")
+			minFileSize = deci(mpConfig->get_option(0, "compr_min_file_size"));
 
 		Glib::ustring rootPath = mpConfig->get_option(mSection, "root");
 
@@ -65,26 +68,59 @@ void Backup::action()
 		}
 
 		archive* pnewArchivePtr;
+		auto_ptr<archive> refArchive;
+
+		if(is_incremental() && mLevel > 1)
+		{
+			message("Loading catalogue of previous level...");
+			stringstream filename;
+			filename << mpConfig->get_option(mSection, "name") << '.' << (mLevel -1);
+
+			refArchive = auto_ptr<archive>(new archive(
+					*this,
+					mpConfig->get_option(0, "home").c_str(),
+					filename.str(),
+					"dar",
+					crypto_none,
+					"", // pass
+					"", // in pipe
+					"", // out pipe
+					"", // execute
+					mpConfig->get_bool_option(0, "verbose")					
+					));
+			message("Done.\n");
+		}
+
+		message("Creating archive...");
+
+		compression comprAlgo;
+		if(mpConfig->get_option(0, "compr_algo") == "bzip2")
+			comprAlgo = bzip2;
+		else if(mpConfig->get_option(0, "compr_algo") == "gzip")
+			comprAlgo = gzip;
+		else
+			comprAlgo = none;
+		
 
 		statistics stats = 
 			op_create(
 					*this,
 					rootPath.c_str(),
 					mpConfig->get_option(mSection, "target").c_str(),
-					NULL, // archive reference (for incremental backups)
+					refArchive.get(), // archive reference (for incremental backups)
 					bool_mask(true), // file includes, excludes
 					*dirMask, // prunes
 					mpConfig->get_option(mSection, "name").c_str(),
 					"dar",
 					true, // allow overwrite
-					true, // warn overwrite
+					mpConfig->get_bool_option(0, "notify_overwrite"),
 					mpConfig->get_bool_option(0, "verbose"),
 					false, // pause between slices
 					true, // pruned dir -> create empty
-					bzip2,
+					comprAlgo,
 					9, // compression level 0..9
-					tmp.computer(), // slice size
-					tmp.computer(), // first slice size
+					minFileSize.computer(), // slice size
+					minFileSize.computer(), // first slice size
 					false, // root ea
 					false, // user ea
 					"", // command between slices
@@ -105,13 +141,13 @@ void Backup::action()
 		// print statistics
 		{
 			stringstream msg;
-			msg << "Backup done: " << endl
+			msg << endl << "Backup done: " << endl
 				<< stats.treated << " files/directories added" << endl
 				<< stats.errored << " files could not be saved" << endl
 				<< stats.ignored << " files/trees have been filtered out" <<endl;
-			if(is_incremental())
+			if(is_incremental() && mLevel > 1)
 				msg << stats.skipped << " files unchanged" << endl
-					 << stats.deleted << " files have been deleted";
+					 << stats.deleted << " files have been deleted" << endl;
 			message(msg.str().c_str());
 		}
 
@@ -134,7 +170,7 @@ void Backup::action()
 					false, // notify overwrite
 					mpConfig->get_bool_option(0, "verbose"),
 					false, // pause
-					bzip2,
+					none,
 					9,
 					tmp.computer(), // slice size
 					tmp.computer(), // first slice
@@ -144,7 +180,7 @@ void Backup::action()
 					);
 		}
 
-		message("Done.");
+		message("All done.");
 
 
 	} catch(Egeneric& e) {

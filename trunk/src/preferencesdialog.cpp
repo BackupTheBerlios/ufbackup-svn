@@ -23,7 +23,7 @@ using namespace Gtk;
 
 PreferencesDialog::PreferencesDialog(Window& parent, Config* config)
 	: Dialog("Preferences", parent), mpConfig(config),
-	mOptionVerbose("Verbose output")
+	mOptionVerbose("Verbose output"), mOptionNotifyOverwrite("Ask before owerwriting archives")
 {
 	set_default_size(350,250);
 	// add close button
@@ -51,32 +51,63 @@ PreferencesDialog::PreferencesDialog(Window& parent, Config* config)
 		ptooltips->set_tip(mOptionVerbose,
 				"Whether the backends should print verbose messages");
 
+		mOptionNotifyOverwrite.set_active(
+				mpConfig->get_bool_option(0, "notify_overwrite"));
+		pbox->pack_start(mOptionNotifyOverwrite, PACK_SHRINK, 5);
+		ptooltips->set_tip(mOptionNotifyOverwrite,
+				"Whether ufBackup should ask you before overwriting existing archives");
+		
 		pbox->set_border_width(2);
 		pnotebook->append_page(*pbox, "General");
 	}
 
-	// setup command options page and add it to notebook
+	// setup compression options page and add it to notebook
 	{
-		Table* ptable = manage(new Table(1,2));
-		ptable->set_row_spacings(3);
-		ptable->set_col_spacings(7);
-		ptable->set_border_width(2);
+		VBox* pbox = manage(new VBox());
 
-		Label* pLabel;
-		int row = 0;
+		Table* ptable = manage(new Table(2,2));
+		int rowcount(0);
+		pbox->pack_start(*ptable, PACK_EXPAND_WIDGET, 5);
+				
+		{
+			Label* label = manage(new Label("Minimal file size:"));
+			mOptionFileSize.set_text(
+					mpConfig->get_option(0, "compr_min_file_size"));
+			ptooltips->set_tip(mOptionFileSize,
+					"Minimal size of files to compress (in bytes)");
+			ptable->attach(*label, 0, 1, rowcount, rowcount + 1, FILL, FILL, 5, 0);
+			ptable->attach(mOptionFileSize, 1, 2, rowcount, rowcount + 1, FILL, FILL, 5, 0);
+			rowcount++;
+		}		
+		{
+			{
+				Menu* pmenu = manage(new Menu());
 
-		pLabel = manage(new Label("Afio:"));
-		pLabel->set_alignment(1,0.5);
-		ptable->attach(*pLabel, 0, 1, row, row + 1, SHRINK, SHRINK);
-		ptable->attach(mOptionAfio, 1, 2, row, row + 1, SHRINK, SHRINK);
-		ptooltips->set_tip(mOptionAfio,
-				"afio is the main backend of ufBackup\nDefault: afio");
-		mOptionAfio.set_text(
-				mpConfig->get_option(0, "afio"));
-		row++;
+				pmenu->append(*manage(new MenuItem("bzip2")));
+				pmenu->append(*manage(new MenuItem("gzip")));
 
-		pnotebook->append_page(*ptable, "Commands");
+				Glib::ustring selected = mpConfig->get_option(0, "compr_algo");
+
+				if(selected == "bzip2")
+					pmenu->set_active(0);
+				else
+					pmenu->set_active(1);
+
+				mOptionCompressionAlgo.set_menu(*pmenu);
+			}
+
+			Label* label = manage(new Label("Algorithm:"));
+			ptooltips->set_tip(mOptionCompressionAlgo,
+					"Which compression algorithm should be used. You are advised to select bzip2.");
+			ptable->attach(*label, 0, 1, rowcount, rowcount + 1, FILL, FILL, 5, 0);
+			ptable->attach(mOptionCompressionAlgo, 1, 2, rowcount, rowcount + 1, FILL, FILL, 5, 0);
+			rowcount++;
+		}
+
+		pbox->set_border_width(2);
+		pnotebook->append_page(*pbox, "Compression");
 	}
+
 
 	// done. show all
 	show_all_children();
@@ -86,7 +117,15 @@ void PreferencesDialog::save()
 {
 	mpConfig->set_bool_option(0, "verbose",
 			mOptionVerbose.get_active());
-	mpConfig->set_option(0, "afio",
-			mOptionAfio.get_text());
+	mpConfig->set_bool_option(0, "notify_overwrite",
+			mOptionNotifyOverwrite.get_active());
+	mpConfig->set_option(0, "compr_min_file_size", mOptionFileSize.get_text().c_str());
+	
+	{
+		Glib::ustring algo = "gzip";
+		if(mOptionCompressionAlgo.get_history() == 0)
+			algo = "bzip2";
+		mpConfig->set_option(0, "compr_algo", algo);
+	}
 	mpConfig->save();
 }

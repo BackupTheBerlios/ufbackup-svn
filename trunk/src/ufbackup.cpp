@@ -74,6 +74,9 @@ int main(int argc,char *argv[])
 	  // set needed options if new config file
 	  if(not existed) {
 		 config.set_option(0, "verbose", "false");
+		 config.set_option(0, "notify_overwrite", "true");
+		 config.set_option(0, "compr_min_file_size", "0");
+		 config.set_option(0, "compr_algo", "bzip2");
 		 config.save();
 	  }
 

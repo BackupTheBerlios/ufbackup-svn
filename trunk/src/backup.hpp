@@ -32,12 +32,12 @@ class Backup : public DARAction
 		Backup() : mLevel(1) {};
 		Backup(Config* config, tSectionID section) : Action(config, section) { }
 		virtual void start() { action(); }
-	protected:
-		void action();
-	private:
 		void set_level(unsigned int level) {
 			mLevel = level;
 		}
+	protected:
+		void action();
+	private:
 		bool is_incremental() {
 			if(mpConfig->get_option(mSection, "type") == "incremental")
 				return true;

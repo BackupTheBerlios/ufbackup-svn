@@ -29,6 +29,8 @@
 #include <gtkmm/table.h>
 #include <gtkmm/dialog.h>
 #include <gtkmm/stock.h>
+#include <gtkmm/optionmenu.h>
+
 
 #include <config.hpp>
 
@@ -39,8 +41,10 @@ class PreferencesDialog : public Gtk::Dialog
 		// save options to config
 		void save();
 	private:
-		Gtk::Entry mOptionAfio;
-		Gtk::CheckButton mOptionVerbose;
+		Gtk::Entry mOptionFileSize;
+		Gtk::OptionMenu mOptionCompressionAlgo;
+		Gtk::CheckButton mOptionNotifyOverwrite, mOptionVerbose;
+
 		Config* mpConfig;
 };	
 

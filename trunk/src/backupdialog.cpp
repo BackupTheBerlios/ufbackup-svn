@@ -59,7 +59,7 @@ BackupDialog::BackupDialog(Gtk::Window& parent, Config* ppConfig, tSectionID sec
 
 		if(backupType == "incremental") // incremental backup
 		{
-			mOptionLevel.set_value(mpConfig->get_num_option(mSection, "level"));
+//TODO: automatic level			mOptionLevel.set_value(mpConfig->get_num_option(mSection, "level"));
 			mOptionLevel.set_range(1,999);
 			mOptionLevel.set_increments(1,2);
 			mOptionLevel.set_numeric();
@@ -133,6 +133,8 @@ void BackupDialog::on_button_exec()
 		cerr << "try" << endl;
 		mpBackupThread = new BackupThread(mpConfig, mSection); 
 		mpBackupThread->set_log(mpLog);
+		mpBackupThread->set_level((unsigned int) mOptionLevel.get_value());
+		
 		cerr << "try done" << endl;
 	
 		// Connect end signal and start
