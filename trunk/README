@@ -1,0 +1,51 @@
+========================================================README========
+ufBackup - The user friendly backup solution
+======================================================================
+Version: 0.1.0 (unstable/development)
+Released: 
+======================================================================
+
+ufBackup is an easy to use free (as in speech) GUI backup solution for
+Unix-like operating systems with a strong focus toward an individual
+workstation.
+
+This is an unstable development release of ufBackup. Dont't use it to
+backup important data!
+As this is the first public release, there will be some bugs. Please
+report them at "http://developer.berlios.de/bugs/?group_id=1700".
+Thanks!
+
+Features (of upcoming version 0.2.0):
+-Full or incremental backups
+-Backup to CDR(W), tape, floppy, or any file or directory
+-Compression (gzip/bzip2)
+-Encryption (symmetrical cipher)
+-Command line backup starter (for cron jobs etc)
+
+Requirements:
+-latest libdar development version (2.1.x). ufBackup 0.2.x will depend
+on libdar 2.2.x
+
+Optional requirements:
+-cdrtools 2.00.x (Backup to CDR(W))
+
+ufBackup may work with older or newer versions of these programs,
+but it is only tested with the stated versions!
+
+Documentation:
+AUTHORS   - Who worked on this software
+BUGS      - Known Bugs
+INSTALL   - Install instructions
+TODO      - Upcoming features
+COPYING   - The GPL, under which ufBackup is licensed
+NEWS      - Changes from the old versions
+ChangeLog - NEWS for developers :)
+doc/*     - Misc documentation
+
+========================================================Credits=======
+
+           Author: Christian Neumann <christian@altfrau.de>
+         Homepage: http://www.altfrau.de/
+ufBackup Homepage: http://ufbackup.berlios.de/ 
+
+========================================================EOF===========
