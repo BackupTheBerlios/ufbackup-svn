@@ -127,7 +127,7 @@ PropertiesDialog::PropertiesDialog(Window& parent, Config* config, tSectionID se
 		mOptionDirectoryPrunes.set_section(mSection);
 		mOptionDirectoryPrunes.set_name("prunes_dirs");
 		mOptionDirectoryPrunes.add_filter_button();
-		mOptionDirectoryIncludes.set_root(mpConfig->get_option(mSection, "root"));
+		mOptionDirectoryPrunes.set_root(mpConfig->get_option(mSection, "root"));
 		mOptionDirectoryPrunes.reload();
 		pdirectoriesBox->pack_start(mOptionDirectoryPrunes, PACK_EXPAND_WIDGET);
 	}
