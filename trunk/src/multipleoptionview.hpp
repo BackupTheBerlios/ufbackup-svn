@@ -81,6 +81,7 @@ class MultipleDirOptionView : public MultipleOptionView
 		MultipleDirOptionView();
 		void set_root(const Glib::ustring& root) {
 			mRoot = root; }
+		void add_filter_button();
 	protected:
 		void on_add_button();
 		Glib::ustring mRoot;

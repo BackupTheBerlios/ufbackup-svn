@@ -128,19 +128,22 @@ void MultipleOptionView::on_add_filter_button()
 
 MultipleDirOptionView::MultipleDirOptionView()
 {
-	Button* pAddButton = manage(new Button("Add filter"));
-	pAddButton->signal_clicked().connect(
-			sigc::mem_fun(*this, &MultipleOptionView::on_add_filter_button));
-
-	mButtons.pack_end(*pAddButton);
-	mButtons.reorder_child(*pAddButton, 0);
-
-	pAddButton = manage(new Button(Stock::ADD));
+	Button* pAddButton = manage(new Button(Stock::ADD));
 	pAddButton->signal_clicked().connect(
 			sigc::mem_fun(*this, &MultipleDirOptionView::on_add_button));
 
 	mButtons.pack_end(*pAddButton);
 	mButtons.reorder_child(*pAddButton, 0);
+}
+
+void MultipleDirOptionView::add_filter_button()
+{
+	Button* pAddButton = manage(new Button("Add filter"));
+	pAddButton->signal_clicked().connect(
+			sigc::mem_fun(*this, &MultipleOptionView::on_add_filter_button));
+
+	mButtons.pack_end(*pAddButton);
+	mButtons.reorder_child(*pAddButton, 1);
 }
 
 MultipleFilterOptionView::MultipleFilterOptionView()

@@ -58,8 +58,7 @@ class PropertiesDialog : public Gtk::Dialog
 	void on_targetdir_choose_button();
 
 	MultipleFilterOptionView mFilterView;
-	MultipleDirOptionView mOptionDirectoryIncludes;
-	MultipleFilterOptionView mOptionDirectoryPrunes;
+	MultipleDirOptionView mOptionDirectoryIncludes, mOptionDirectoryPrunes;
 };
 
 #endif
