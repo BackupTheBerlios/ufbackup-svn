@@ -114,7 +114,38 @@ void Backup::action()
 					 << stats.deleted << " files have been deleted";
 			message(msg.str().c_str());
 		}
-		
+
+		message("Saving archive's catalogue...");
+
+		// isolate archive
+		{
+			stringstream filename;
+			filename << mpConfig->get_option(mSection, "name");
+			if(is_incremental())
+				filename << '.' << mLevel;
+						
+			op_isolate(
+					*this,
+					mpConfig->get_option(0, "home").c_str(),
+					pnewArchive.get(),
+					filename.str(),
+					"dar",	
+					true, // alow overwrite
+					false, // notify overwrite
+					mpConfig->get_bool_option(0, "verbose"),
+					false, // pause
+					bzip2,
+					9,
+					tmp.computer(), // slice size
+					tmp.computer(), // first slice
+					"", // execute
+					crypto_none,
+					"" // pass
+					);
+		}
+
+		message("Done.");
+
 
 	} catch(Egeneric& e) {
 		error(e.get_message().c_str());
