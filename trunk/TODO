@@ -17,6 +17,7 @@
 	-Restore only single files
 -Archive listing:
 	-Search for files
+	-Specify backup level
 -More targets:
 	-CDR(W)
 -Translations
