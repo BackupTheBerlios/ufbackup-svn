@@ -33,6 +33,7 @@
 #include <gtkmm/stock.h>
 #include <gtkmm/dialog.h>
 #include <gtkmm/messagedialog.h>
+#include <gtkmm/checkbutton.h>
 
 #include <backupthread.hpp>
 #include <stdexcept>
@@ -64,6 +65,7 @@ class BackupDialog : public Gtk::Dialog
 		
 		// options
 		Gtk::SpinButton mOptionLevel;
+		Gtk::CheckButton mOptionDummyRun;
 
 		void on_button_exec();
 		void on_buffer_insert(const Gtk::TextBuffer::iterator&, const Glib::ustring&, int);

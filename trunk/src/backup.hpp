@@ -32,11 +32,14 @@ enum tMaskType {
 class Backup : public DARAction
 {
 	public:
-		Backup() : mLevel(1) {};
+		Backup() : mLevel(1), mOptionDummyRun(false) {};
 		Backup(Config* config, tSectionID section) : Action(config, section) { }
 		virtual void start() { action(); }
 		void set_level(unsigned int level) {
 			mLevel = level;
+		}
+		void set_dummy(bool val=true) {
+			mOptionDummyRun = val;
 		}
 	protected:
 		void action();
@@ -50,6 +53,7 @@ class Backup : public DARAction
 				return false;
 		}
 		unsigned int mLevel;
+		bool mOptionDummyRun;
 };
 
 #endif

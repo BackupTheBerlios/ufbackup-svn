@@ -6,7 +6,6 @@
 	-Options:
 		-Stay on same fs
 		-alter atime
-		-dummy run
 		-hourshift
 		-ignore ownership
 		-nodump flag

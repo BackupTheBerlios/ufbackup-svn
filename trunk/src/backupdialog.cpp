@@ -26,6 +26,7 @@ using namespace std;
 
 BackupDialog::BackupDialog(Gtk::Window& parent, Config* ppConfig, tSectionID section)
 	: Dialog("Backup", parent), mSection(section),
+	mOptionDummyRun("Dummy run"),
 	mpConfig(ppConfig), mpBackupThread(NULL), mOptionLevel(1.0),
 	mExecButton(Stock::EXECUTE)
 {
@@ -52,8 +53,8 @@ BackupDialog::BackupDialog(Gtk::Window& parent, Config* ppConfig, tSectionID sec
 		Table* optionTable = manage(new Table(2,2));
 
 		Label* label = manage(new Label("Level:"));
-		optionTable->attach(*label, 0, 1, 1, 2, Gtk::FILL, Gtk::FILL, 5, 0);
-		optionTable->attach(mOptionLevel, 1, 2, 1, 2, Gtk::FILL, Gtk::FILL, 5, 0);						
+		optionTable->attach(*label, 0, 1, 0, 1, Gtk::FILL, Gtk::FILL, 5, 0);
+		optionTable->attach(mOptionLevel, 1, 2, 0, 1, Gtk::FILL, Gtk::FILL, 5, 0);						
 		label->set_sensitive(false);
 		mOptionLevel.set_sensitive(false);
 
@@ -66,6 +67,10 @@ BackupDialog::BackupDialog(Gtk::Window& parent, Config* ppConfig, tSectionID sec
 			mOptionLevel.set_sensitive();
 			label->set_sensitive();
 		}
+
+		// dummy run option
+		mOptionDummyRun.set_active(false);
+		optionTable->attach(mOptionDummyRun, 0, 2, 1, 2, FILL, FILL, 5, 0);
 		
 		// add option table to option frame
 		poptionFrame->add(*optionTable);
@@ -130,12 +135,11 @@ void BackupDialog::on_button_exec()
 	mExecButton.set_label("gtk-stop");
 
 	try {
-		cerr << "try" << endl;
 		mpBackupThread = new BackupThread(mpConfig, mSection); 
 		mpBackupThread->set_log(mpLog);
 		mpBackupThread->set_level((unsigned int) mOptionLevel.get_value());
-		
-		cerr << "try done" << endl;
+		if(mOptionDummyRun.get_active())
+			mpBackupThread->set_dummy();
 	
 		// Connect end signal and start
 		mpBackupThread->signal_end().connect(sigc::mem_fun(*this, &BackupDialog::on_backup_end));

@@ -176,7 +176,7 @@ void Backup::action()
 					false, // nodump flag
 					false, // ignore ownership
 					tmp.computer(), // hourshift
-					false, // dummy run
+					mOptionDummyRun,
 					&pnewArchivePtr,
 					false, // alter atime
 					false // stay on same fs
@@ -196,33 +196,35 @@ void Backup::action()
 			message(msg.str().c_str());
 		}
 
-		message("Saving archive's catalogue...");
+		if(not mOptionDummyRun) {
+			message("Saving archive's catalogue...");
 
-		// isolate archive
-		{
-			stringstream filename;
-			filename << mpConfig->get_option(mSection, "name");
-			if(is_incremental())
-				filename << '.' << mLevel;
-						
-			op_isolate(
-					*this,
-					mpConfig->get_option(0, "home").c_str(),
-					pnewArchive.get(),
-					filename.str(),
-					"dar",	
-					true, // alow overwrite
-					false, // notify overwrite
-					mpConfig->get_bool_option(0, "verbose"),
-					false, // pause
-					comprAlgo,
-					9,
-					tmp.computer(), // slice size
-					tmp.computer(), // first slice
-					"", // execute
-					crypto_none,
-					"" // pass
-					);
+			// isolate archive
+			{
+				stringstream filename;
+				filename << mpConfig->get_option(mSection, "name");
+				if(is_incremental())
+					filename << '.' << mLevel;
+
+				op_isolate(
+						*this,
+						mpConfig->get_option(0, "home").c_str(),
+						pnewArchive.get(),
+						filename.str(),
+						"dar",	
+						true, // alow overwrite
+						false, // notify overwrite
+						mpConfig->get_bool_option(0, "verbose"),
+						false, // pause
+						comprAlgo,
+						9,
+						tmp.computer(), // slice size
+						tmp.computer(), // first slice
+						"", // execute
+						crypto_none,
+						"" // pass
+						);
+			}
 		}
 
 		message("All done.");
